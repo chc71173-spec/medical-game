@@ -7,6 +7,7 @@
   <style>
     :root {
       --primary: #1F4E79;
+      --primary-light: #5187B0;
       --secondary: #2A9D8F;
       --bg: #F5F9FC;
       --panel: #FFFFFF;
@@ -31,14 +32,14 @@
     header {
       background: var(--panel);
       border-bottom: 2px solid var(--primary);
-      padding: 1rem 1.5rem;
+      padding: 0.5rem 1.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 1px 3px rgba(31, 78, 121, 0.06);
     }
     header h1 {
-      font-size: 1.4rem;
+      font-size: 1.2rem;
       color: var(--primary);
       letter-spacing: 0.05em;
     }
@@ -49,19 +50,26 @@
     main {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 1.5rem;
+      padding: 1rem 1.5rem 1.25rem;
       display: grid;
       grid-template-columns: 1fr 2fr;
-      gap: 1.5rem;
+      gap: 1.25rem;
     }
     @media (max-width: 900px) {
       main { grid-template-columns: 1fr; }
+    }
+    /* 桌面版：頁面卷軸保留；對話 log 自己限高度不擠爆頁面 */
+    @media (min-width: 900px) {
+      #dialogue-log {
+        max-height: calc(100vh - 22rem);
+        min-height: 280px;
+      }
     }
     section {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 1.25rem;
+      padding: 1rem 1.1rem;
       box-shadow: 0 1px 3px rgba(31, 78, 121, 0.04);
     }
     section h2 {
@@ -107,7 +115,7 @@
     }
     .stat-row {
       display: grid;
-      grid-template-columns: 2.5rem 2rem 1fr;
+      grid-template-columns: 2.5rem 4.5rem 1fr;
       align-items: center;
       gap: 0.5rem;
       font-size: 0.8rem;
@@ -123,6 +131,13 @@
       font-weight: 600;
       text-align: right;
       font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .stat-lv-xp {
+      color: var(--text-dim);
+      font-weight: 400;
+      font-size: 0.72rem;
+      margin-left: 0.1rem;
     }
     .lv-bar-track {
       background: #fff;
@@ -158,11 +173,302 @@
       background: var(--panel-light);
       color: var(--text);
     }
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 42, 53, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--panel);
+      border-radius: 10px;
+      width: min(460px, 92vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(31, 78, 121, 0.25);
+      border: 1px solid var(--border);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h3 {
+      color: var(--primary);
+      font-size: 1.05rem;
+    }
+    .modal-close {
+      background: transparent;
+      color: var(--text-dim);
+      border: none;
+      font-size: 1.2rem;
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+    }
+    .modal-close:hover { background: var(--panel-light); color: var(--text); }
+    .modal-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .modal-body label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .modal-body input[type="password"],
+    .modal-body input[type="text"],
+    .modal-body select,
+    .modal-body textarea {
+      width: 100%;
+      margin-top: 0.35rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+    .modal-body textarea {
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .modal-body input:focus, .modal-body select:focus, .modal-body textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .modal-hint {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-top: 0.3rem;
+      line-height: 1.5;
+    }
+    .modal-hint a { color: var(--accent); }
+    .provider-hint { display: none; }
+    .provider-hint.active { display: inline; }
+    /* 彙整問診 */
+    .summary-content {
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--text);
+      max-height: 65vh;
+      overflow-y: auto;
+    }
+    .summary-content h3 {
+      color: var(--primary);
+      font-size: 0.95rem;
+      margin: 1rem 0 0.25rem;
+      padding-bottom: 0.15rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .summary-content h3:first-child { margin-top: 0; }
+    .summary-content h4 {
+      color: var(--secondary);
+      font-size: 0.88rem;
+      margin: 0.75rem 0 0.25rem;
+    }
+    .summary-content ul {
+      margin: 0.25rem 0 0.5rem 1.25rem;
+      padding: 0;
+    }
+    .summary-content li { margin: 0.15rem 0; }
+    .summary-content p { margin: 0.25rem 0; }
+    .summary-content .gap {
+      color: var(--text-dim);
+      font-style: italic;
+    }
+    /* 選科別 picker */
+    .organ-pick-random {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+    }
+    .organ-pick-divider {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      margin: 0.6rem 0 0.4rem;
+    }
+    .organ-pick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.4rem;
+    }
+    .organ-pick-btn {
+      background: var(--panel-light);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.7rem;
+      text-align: left;
+      font-size: 0.86rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 500;
+      justify-content: flex-start;
+    }
+    .organ-pick-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .organ-pick-icon { font-size: 1.1rem; }
+    /* 下診斷結果 */
+    .grade-banner {
+      padding: 0.9rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      text-align: center;
+      font-weight: 600;
+    }
+    .grade-banner.hit {
+      background: #e7f6ee;
+      border-left: 4px solid var(--success);
+      color: #1f6a49;
+    }
+    .grade-banner.miss {
+      background: #fdecea;
+      border-left: 4px solid var(--danger);
+      color: #8a2a1e;
+    }
+    .grade-dx {
+      font-size: 0.85rem;
+      font-weight: 400;
+      margin-top: 0.35rem;
+      line-height: 1.45;
+    }
+    .grade-dx strong { font-weight: 600; }
+    .grade-row {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .grade-row:last-of-type { border-bottom: none; }
+    .grade-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+    }
+    .grade-dim-name { font-weight: 600; color: var(--primary); }
+    .grade-score {
+      color: var(--secondary);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .grade-bar-track {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      height: 9px;
+      overflow: hidden;
+      margin-bottom: 0.35rem;
+    }
+    .grade-bar-fill {
+      background: linear-gradient(90deg, var(--secondary), var(--accent));
+      height: 100%;
+      transition: width 0.5s ease-out;
+    }
+    .grade-fb {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+      padding-left: 0.2rem;
+    }
+    .grade-learnings {
+      margin-top: 1rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--border);
+    }
+    .grade-learnings h4 {
+      color: var(--primary);
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+    }
+    .grade-learnings ul {
+      margin-left: 1.2rem;
+      font-size: 0.85rem;
+    }
+    .grade-learnings li {
+      margin: 0.2rem 0;
+      line-height: 1.55;
+    }
+    .grade-xp-summary {
+      margin-top: 1rem;
+      text-align: center;
+      padding: 0.75rem;
+      background: var(--panel-light);
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+    .grade-xp-summary strong {
+      color: var(--secondary);
+      font-size: 1.3rem;
+      margin: 0 0.2rem;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    /* 對話狀態 */
+    .msg.system-error {
+      background: #fdecea;
+      border-left: 3px solid var(--danger);
+      color: #8a2a1e;
+      font-size: 0.85rem;
+      margin: 0.5rem auto;
+      padding: 0.5rem 0.8rem;
+      max-width: 85%;
+    }
+    .msg.system-info {
+      background: #e8f1f8;
+      border-left: 3px solid var(--accent);
+      color: var(--primary);
+      font-size: 0.85rem;
+      margin: 0.5rem auto;
+      padding: 0.5rem 0.9rem;
+      text-align: center;
+      max-width: 70%;
+      width: fit-content;
+    }
+    .typing-indicator {
+      display: inline-flex;
+      gap: 0.25rem;
+      padding: 0.3rem 0;
+    }
+    .typing-indicator span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      animation: typing-bounce 1.2s infinite ease-in-out;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes typing-bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-4px); opacity: 1; }
+    }
     /* 對話區 */
     #dialogue-panel {
       display: flex;
       flex-direction: column;
-      min-height: 500px;
     }
     #case-info {
       background: var(--panel-light);
@@ -177,36 +483,90 @@
       color: var(--primary);
       font-weight: 600;
     }
+    .case-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.25rem;
+    }
+    .phase-badge {
+      background: var(--secondary);
+      color: #fff;
+      padding: 0.15rem 0.55rem;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+    .case-id-text {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+    }
     #dialogue-log {
       flex: 1;
       overflow-y: auto;
-      padding: 0.5rem 0;
-      max-height: 400px;
+      padding: 0.25rem 0;
+      min-height: 280px;
     }
     .msg {
-      margin-bottom: 0.75rem;
-      padding: 0.6rem 0.9rem;
+      margin-bottom: 0.4rem;
+      padding: 0.4rem 0.65rem;
       border-radius: 6px;
-      line-height: 1.5;
+      line-height: 1.45;
+      font-size: 0.85rem;
+      width: fit-content;
+      max-width: 82%;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
     }
     .msg.doctor {
-      background: var(--primary);
+      background: var(--primary-light);
       color: #fff;
-      margin-left: 2rem;
+      margin-left: auto;
+      margin-right: 0;
     }
     .msg.patient {
       background: var(--panel-light);
       color: var(--text);
-      margin-right: 2rem;
+      margin-left: 0;
+      margin-right: auto;
     }
     .msg .who {
-      font-size: 0.75rem;
+      font-size: 0.68rem;
       color: var(--text-dim);
-      margin-bottom: 0.2rem;
+      margin-bottom: 0.1rem;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
     }
     .msg.doctor .who { color: rgba(255,255,255,0.75); }
+    .msg-table {
+      border-collapse: collapse;
+      margin: 0.3rem 0;
+      font-size: 0.78rem;
+      font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+      background: #fff;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .msg-table th {
+      color: var(--primary);
+      padding: 0.3rem 0.55rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.73rem;
+      background: var(--panel-light);
+      letter-spacing: 0.02em;
+    }
+    .msg-table td {
+      padding: 0.25rem 0.55rem;
+      border-bottom: 1px solid rgba(31, 78, 121, 0.06);
+      color: var(--text);
+    }
+    .msg-table tr:last-child td { border-bottom: none; }
+    .msg-table td.flag-h { color: var(--danger); font-weight: 600; }
+    .msg-table td.flag-l { color: var(--warning); font-weight: 600; }
     #input-bar {
       display: flex;
       gap: 0.5rem;
@@ -298,7 +658,10 @@
       <h2>🩺 問診區</h2>
 
       <div id="case-info" class="hidden">
-        <div>Case #<span id="case-number">0</span></div>
+        <div class="case-info-row">
+          <span class="phase-badge" id="phase-indicator">Phase 1｜問診</span>
+          <span class="case-id-text">Case #<span id="case-number">0</span></span>
+        </div>
         <div>病人：<span id="patient-intro">-</span></div>
         <div class="chief-complaint">主訴：<span id="chief-complaint">-</span></div>
       </div>
@@ -312,23 +675,140 @@
       </div>
 
       <div id="input-bar">
-        <input type="text" id="doctor-input" placeholder="輸入你想問的問題（例：什麼時候開始的？）..." disabled />
+        <input type="text" id="doctor-input"
+          placeholder="輸入你想問的問題（例：什麼時候開始的？）..."
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          data-lpignore="true"
+          data-form-type="other"
+          disabled />
         <button id="send-btn" disabled>送出</button>
       </div>
 
       <div id="control-bar">
-        <button id="new-case-btn">🎲 開新 Case</button>
-        <button id="diagnose-btn" class="secondary" disabled>📋 下診斷</button>
+        <button id="new-case-btn">🛎️ 看新病人</button>
+        <button id="end-phase-btn" disabled>✋ 結束問診</button>
+        <button id="summary-btn" class="secondary" disabled>📝 彙整問診</button>
+        <button id="hint-btn" class="secondary" disabled>💡 提示</button>
+        <button id="diagnose-btn" class="secondary" disabled title="舊版單階段評分（保留備援）">📋 下診斷</button>
         <button id="settings-btn" class="secondary">⚙ 設定</button>
       </div>
     </section>
   </main>
 
+  <!-- 設定 Modal -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>⚙ 設定</h3>
+        <button class="modal-close" id="modal-close-btn" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <label for="provider-select">API 提供者</label>
+          <select id="provider-select">
+            <option value="anthropic">Anthropic（Claude）</option>
+            <option value="google">Google（Gemini）</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="api-key-input">API 金鑰</label>
+          <input type="password" id="api-key-input" placeholder="..." autocomplete="off" />
+          <p class="modal-hint">
+            <span class="provider-hint" data-provider="anthropic">
+              沒金鑰？去 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> 申請（需付費帳號）。
+            </span>
+            <span class="provider-hint" data-provider="google">
+              沒金鑰？去 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> 申請（有免費額度）。
+            </span>
+            <br/>兩家金鑰分開儲存、切換提供者不會互蓋。金鑰存在你的瀏覽器本地，<strong>不會上傳任何地方</strong>。
+          </p>
+        </div>
+
+        <div>
+          <label for="model-select">模型</label>
+          <select id="model-select"></select>
+          <p class="modal-hint" id="model-hint">第一次可以先用最便宜的模型測試問答流程，確認沒問題再換高級模型正式玩。</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="secondary" id="modal-cancel-btn">取消</button>
+        <button id="modal-save-btn">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 下診斷 Modal -->
+  <div id="diagnose-overlay" class="modal-overlay hidden">
+    <div class="modal" style="width: min(600px, 95vw); max-height: 92vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <h3 id="diagnose-title">📋 下診斷</h3>
+        <button class="modal-close" id="diagnose-close-btn" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body" id="diagnose-body" style="overflow-y:auto;"></div>
+      <div class="modal-footer" id="diagnose-footer"></div>
+    </div>
+  </div>
+
+  <!-- 選科別 Modal -->
+  <div id="organ-picker-overlay" class="modal-overlay hidden">
+    <div class="modal" style="width: min(420px, 92vw);">
+      <div class="modal-header">
+        <h3>🏥 選擇病人科別</h3>
+        <button class="modal-close" id="organ-picker-close-btn" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <button class="organ-pick-random" id="pick-random-btn">🎲 隨機科別</button>
+        <div class="organ-pick-divider">或選一個科別：</div>
+        <div class="organ-pick-grid" id="organ-pick-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 彙整問診 Modal -->
+  <div id="summary-overlay" class="modal-overlay hidden">
+    <div class="modal" style="width: min(640px, 95vw);">
+      <div class="modal-header">
+        <h3>📝 問診彙整</h3>
+        <button class="modal-close" id="summary-close-btn" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="summary-content" class="summary-content">
+          <div style="text-align:center; color: var(--text-dim); padding: 2rem 0;">
+            <div class="typing-indicator" style="justify-content:center;"><span></span><span></span><span></span></div>
+            <div style="margin-top:0.5rem; font-size: 0.85rem;">整理中...</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="secondary" id="summary-copy-btn">複製</button>
+        <button id="summary-done-btn">關閉</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ========== 資料模型 ==========
     const STORAGE_KEY = 'clinicRPG.v1';
-    const LV_MAX = 10;
-    const XP_PER_LV = 10; // 10 XP 升一級
+    const MAX_LV = 99; // 安全上限
+
+    // 升級曲線：從 LV n 升到 LV (n+1) 需要 2n XP
+    // LV1→2: 2, LV2→3: 4, LV3→4: 6, ...
+    function xpCostToLevelUp(lv) { return 2 * lv; }
+
+    // 給定累積總 XP，回傳當前 LV、本級經驗條剩餘 XP、本級上限
+    function computeLevel(totalXp) {
+      let lv = 1;
+      let remaining = totalXp;
+      while (lv < MAX_LV && remaining >= xpCostToLevelUp(lv)) {
+        remaining -= xpCostToLevelUp(lv);
+        lv++;
+      }
+      return { lv, xpInBar: remaining, xpBarMax: xpCostToLevelUp(lv) };
+    }
 
     const ORGANS = [
       { id: 'cardio',    name: '心臟科',     icon: '❤️' },
@@ -354,7 +834,7 @@
         for (const d of DIMENSIONS) stats[o.id][d.id] = 0; // XP
       }
       return {
-        version: 2,
+        version: 3,
         stats,
         totalCases: 0,
         createdAt: new Date().toISOString(),
@@ -366,7 +846,7 @@
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return emptyState();
         const parsed = JSON.parse(raw);
-        if (parsed.version !== 2) return emptyState();
+        if (parsed.version !== 3) return emptyState();
         // 補齊新器官/維度（面對未來版本變更）
         const base = emptyState();
         for (const o of ORGANS) {
@@ -389,13 +869,8 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
-    function xpToLv(xp) {
-      return Math.min(LV_MAX, Math.floor(xp / XP_PER_LV));
-    }
-
     function addXP(organId, dimId, amount) {
-      const maxXP = LV_MAX * XP_PER_LV;
-      state.stats[organId][dimId] = Math.max(0, Math.min(maxXP, state.stats[organId][dimId] + amount));
+      state.stats[organId][dimId] = Math.max(0, state.stats[organId][dimId] + amount);
       saveState(state);
       renderStats();
     }
@@ -417,21 +892,22 @@
         const name = document.createElement('div');
         name.className = 'stat-card-name';
         name.innerHTML = `<span class="stat-card-icon">${organ.icon}</span>${organ.name}`;
-        const totalLv = DIMENSIONS.reduce((s, d) => s + xpToLv(state.stats[organ.id][d.id]), 0);
+        const totalLv = DIMENSIONS.reduce((s, d) => s + computeLevel(state.stats[organ.id][d.id]).lv, 0);
         const total = document.createElement('div');
         total.className = 'stat-card-total';
-        total.textContent = `總等級 ${totalLv} / ${LV_MAX * DIMENSIONS.length}`;
+        total.textContent = `總等級 ${totalLv}`;
         header.appendChild(name);
         header.appendChild(total);
         card.appendChild(header);
 
         for (const dim of DIMENSIONS) {
           const xp = state.stats[organ.id][dim.id];
-          const lv = xpToLv(xp);
+          const info = computeLevel(xp);
           totalXP += xp;
 
           const row = document.createElement('div');
           row.className = 'stat-row';
+          row.title = `累計 ${xp} XP`;
 
           const label = document.createElement('div');
           label.className = 'stat-dim-label';
@@ -439,13 +915,13 @@
 
           const lvText = document.createElement('div');
           lvText.className = 'stat-lv';
-          lvText.textContent = `LV${lv}`;
+          lvText.innerHTML = `LV${info.lv}<span class="stat-lv-xp"> ${info.xpInBar}/${info.xpBarMax}</span>`;
 
           const track = document.createElement('div');
           track.className = 'lv-bar-track';
           const fill = document.createElement('div');
           fill.className = 'lv-bar-fill';
-          const pct = Math.min(100, (xp / (LV_MAX * XP_PER_LV)) * 100);
+          const pct = Math.min(100, (info.xpInBar / info.xpBarMax) * 100);
           fill.style.width = pct + '%';
           track.appendChild(fill);
 
@@ -462,7 +938,1212 @@
       document.getElementById('total-xp').textContent = totalXP;
     }
 
-    // ========== 事件 ==========
+    // ========== 設定（Provider / API key / 模型）==========
+    const SETTINGS_KEY = 'clinicRPG.settings';
+
+    const MODELS = {
+      anthropic: [
+        { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5 — 便宜快速，適合測試' },
+        { id: 'claude-sonnet-4-6',          label: 'Sonnet 4.6 — 推薦，推理與速度平衡' },
+        { id: 'claude-opus-4-7',            label: 'Opus 4.7 — 最聰明，成本最高' },
+      ],
+      google: [
+        { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite — 最便宜' },
+        { id: 'gemini-2.5-flash',      label: 'Gemini 2.5 Flash — 平衡（推薦）' },
+        { id: 'gemini-2.5-pro',        label: 'Gemini 2.5 Pro — 最強' },
+      ],
+    };
+    const DEFAULT_PROVIDER = 'anthropic';
+    const DEFAULT_MODEL = {
+      anthropic: 'claude-sonnet-4-6',
+      google:    'gemini-2.5-flash',
+    };
+
+    function loadSettings() {
+      try {
+        return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+      } catch { return {}; }
+    }
+    function saveSettings(s) {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    }
+    function currentApiKey(s) {
+      return s.provider === 'google' ? (s.googleApiKey || '') : (s.anthropicApiKey || '');
+    }
+    function currentModel(s) {
+      return s.model || DEFAULT_MODEL[s.provider || DEFAULT_PROVIDER];
+    }
+    let settings = loadSettings();
+
+    // ========== Case 產生器 ==========
+    function buildCaseGenSystemPrompt(forceOrganId) {
+      const organList = ORGANS.map(o => `  - ${o.id}：${o.name}`).join('\n');
+      const forced = forceOrganId && ORGANS.find(o => o.id === forceOrganId);
+      const organRule = forced
+        ? `organ 欄位**必須**是 "${forced.id}"（${forced.name}）。整個 case 的診斷與徵候都要歸屬於這個科別。`
+        : `organ 欄位從下方列表中隨機選一個 id。請讓不同次生成的科別盡量分散、不要老是選同一個。`;
+      return `你是臨床推理遊戲的 case 產生器。請生成一個適合「內科住院醫師 R3」等級的臨床 case。
+
+## 科別指定
+${organRule}
+
+## 科別清單
+${organList}
+
+## 難度 / 風格
+- 可以是 classic presentation 或 atypical，請混合變化
+- 診斷要具體（不要只寫「感染」，要寫「社區型肺炎」「化膿性關節炎」這種程度）
+- 包含足夠 red flag / 關鍵徵候讓 R3 級別可以做鑑別
+
+## 輸出格式（嚴格 JSON，不要用 markdown code block 包起來、不要加任何前後說明）
+{
+  "age": <number 18-85>,
+  "sex": "男" 或 "女",
+  "chiefComplaint": "<簡短主訴 (症狀+時間)，例：胸痛 2 小時、發燒 3 天、體重減輕 3 個月>",
+  "trueDx": "<具體診斷名，中文或英文皆可>",
+  "organ": "<上方 organ id 其中一個>",
+  "personality": "<簡短病人個性描述，例：焦慮話少、愛抱怨、配合但會問很多>",
+  "historyDetails": "<病史細節，用中文+純文字+\\\\n 換行。含：HPI（時間序、症狀特徵、加重/緩解、相關症狀）/ PMH / 用藥 / 過敏 / 家族史 / 社會史（抽菸喝酒職業、旅遊、性生活等）>",
+  "peFindings": {
+    "vitals": "<英文 SOAP 格式：BP xxx/xx, HR xx, RR xx, Temp xx.x°C, SpO2 xx%>",
+    "general": "<general appearance, consciousness level, distress 等>",
+    "heent": "<HEENT + 頸部：淋巴結、甲狀腺等>",
+    "cardio": "<心音、心律、雜音>",
+    "respir": "<呼吸音、叩診等>",
+    "abdomen": "<軟/硬、壓痛、反彈痛、肝脾、腸音>",
+    "neuro": "<意識、MMSE、CN、motor、sensory、DTR、小腦>",
+    "skin": "<皮膚顏色、皮疹、黃疸、紫斑、wound 等>",
+    "special": "<跟主訴/診斷特別相關的額外發現，例：joint swelling、pitting edema、murmur detail 等>"
+  },
+  "labResults": {
+    "CBC": "<WBC/Hb/Plt/DC，英文格式>",
+    "BCS": "<Na/K/Cl/HCO3/BUN/Cr/Glucose>",
+    "LFT": "<AST/ALT/ALP/T.Bil/Alb>",
+    "coagulation": "<PT/INR/aPTT，若相關>",
+    "urinalysis": "<UA 重點>",
+    "special": "<跟診斷強相關的特殊檢驗，例：troponin、BNP、TSH/T4、ANA、HbA1c、cultures、CSF、CRP/ESR...等。每項列值+單位+(H/L)>"
+  },
+  "imageResults": {
+    "ECG": "<若相關，例：sinus tachycardia, ST elevation V1-V4>",
+    "CXR": "<若相關，例：CTR 0.55, increased pulmonary markings, no consolidation>",
+    "special": "<跟診斷強相關的影像，例：Echo、US、CT、MRI、RAIU、bone scan 等的關鍵 finding>"
+  }
+}
+
+## 品質要求
+- 整個 case 必須**自洽**：PE、Lab、Image 跟 history 和 true Dx 相符、可重複引用
+- HPI 時間線合理、加重/緩解因子具體
+- PMH / 家族史 / 社會史要跟診斷有呼應（例：冠心病 case 要有抽菸或家族史；肝病 case 要有酒精或 B/C 肝）
+- PE vital signs 合理反映病情嚴重度
+- Lab 要有 **abnormal 關鍵值**足以支持 true Dx；**非相關的檢驗**可以寫 "within normal limits"
+- Image 非相關的可以只寫 "not indicated" 或留空字串
+- 不要每次都選同一個器官系統，盡量隨機分布
+
+**只輸出 JSON，不要有任何其他文字、不要 markdown code fence。**`;
+    }
+
+    function extractJson(text) {
+      try { return JSON.parse(text); } catch {}
+      // AI 可能把 JSON 包在 ```json ... ``` 裡或前後加文字，抓第一個 { 到最後一個 }
+      const first = text.indexOf('{');
+      const last = text.lastIndexOf('}');
+      if (first === -1 || last === -1 || last <= first) {
+        console.error('[Clinic RPG] JSON 解析失敗，AI 原始回覆：', text);
+        const preview = (text || '').slice(0, 120).replace(/\s+/g, ' ');
+        throw new Error(`AI 沒回傳有效 JSON。收到的前 120 字：「${preview}...」（完整內容請看瀏覽器 Console）`);
+      }
+      try {
+        return JSON.parse(text.slice(first, last + 1));
+      } catch (e) {
+        console.error('[Clinic RPG] JSON 解析失敗，截取片段：', text.slice(first, last + 1));
+        throw new Error('JSON 格式錯誤（可能是被截斷或特殊字元）。詳細請看瀏覽器 Console');
+      }
+    }
+
+    function validateCase(c) {
+      if (!c || typeof c !== 'object') throw new Error('case 不是物件');
+      if (typeof c.age !== 'number') throw new Error('age 缺漏或格式錯');
+      if (c.sex !== '男' && c.sex !== '女') throw new Error('sex 必須是「男」或「女」');
+      for (const f of ['chiefComplaint', 'trueDx', 'personality']) {
+        if (typeof c[f] !== 'string' || !c[f].trim()) throw new Error(`${f} 缺漏`);
+      }
+      if (!ORGANS.some(o => o.id === c.organ)) {
+        throw new Error(`organ 必須是 ${ORGANS.map(o => o.id).join(' / ')} 其中一個`);
+      }
+      // 新 schema：分段 ground truth；舊 schema 向後相容（只有 keyDetails）
+      if (!c.historyDetails && c.keyDetails) c.historyDetails = c.keyDetails;
+      if (typeof c.historyDetails !== 'string' || !c.historyDetails.trim()) {
+        throw new Error('historyDetails 缺漏');
+      }
+      c.peFindings = c.peFindings || {};
+      c.labResults = c.labResults || {};
+      c.imageResults = c.imageResults || {};
+      // keyDetails 保留給舊流程（patient system prompt）
+      if (!c.keyDetails) c.keyDetails = c.historyDetails;
+      return c;
+    }
+
+    async function generateCase(forceOrganId) {
+      const forced = forceOrganId && ORGANS.find(o => o.id === forceOrganId);
+      const userMsg = forced
+        ? `請生成一個 ${forced.name}（${forced.id}）的 case。只回 JSON。`
+        : '請生成一個 case。只回 JSON。';
+      const raw = await callModel(
+        buildCaseGenSystemPrompt(forceOrganId),
+        [{ role: 'user', content: userMsg }],
+        { maxTokens: 2000, jsonMode: true }
+      );
+      const parsed = extractJson(raw);
+      validateCase(parsed);
+      if (forceOrganId && parsed.organ !== forceOrganId) {
+        // AI 沒聽話就強制蓋掉（勝過拒絕生成）
+        console.warn(`[Clinic RPG] AI 回傳 organ=${parsed.organ}，強制覆蓋為 ${forceOrganId}`);
+        parsed.organ = forceOrganId;
+      }
+      parsed.id = 'c' + Date.now().toString(36).slice(-6);
+      return parsed;
+    }
+
+    function showGeneratingMsg(text) {
+      const log = document.getElementById('dialogue-log');
+      const empty = log.querySelector('.empty-state');
+      if (empty) empty.remove();
+      const div = document.createElement('div');
+      div.className = 'msg system-info';
+      div.id = 'generating-case-msg';
+      div.innerHTML = `<div class="typing-indicator" style="justify-content:center; margin-bottom:0.3rem;"><span></span><span></span><span></span></div><div>${escapeHtml(text)}</div>`;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+    function hideGeneratingMsg() {
+      const el = document.getElementById('generating-case-msg');
+      if (el) el.remove();
+    }
+
+    // ========== 階段 System Prompts ==========
+    // Phase 1：病人（中文口語）
+    function buildPatientSystemPrompt(caseData) {
+      return `你正在扮演一位「臨床推理遊戲 Phase 1（問診）」中的病人。玩家（醫師）會對你問診，你要根據下方「病人設定」用病人口吻回答。
+
+## 絕對禁令
+1. **永遠不可說出或暗示真實診斷**。真實診斷是「${caseData.trueDx}」。不能說「我可能心肌梗塞」「可能是心臟問題」「我懷疑是 XX」這種推理語言。
+2. 不可幫醫師分析、推理、或給診斷建議。
+3. **不可主動提供病歷裡沒問到的資訊**。問什麼答什麼。
+
+## 回答風格（嚴格）
+- 用第一人稱「我」，**繁體中文口語**，像一般民眾，不用醫學術語
+- **每次回答最多 1 句話 / 15 字以內**（開場自我介紹除外）
+- **只回答被問的那一件事**，不要擴充到下一題。例：
+  - 問「胸痛多久了？」→ 只回時間「兩小時」。不要加「胸口悶悶的、吃飯後開始」
+  - 問「會流汗嗎？」→ 「會」或「沒有」。不要加噁心、不要加其他症狀
+  - 問「有抽菸嗎？」→ 「有」或「沒有」。後續追問才講多久、一天幾包
+- 不要一次列多個症狀、不要用 bullet 或條列
+- 若細節病歷沒寫，就回「沒注意到耶」「不記得了」「應該沒有吧」，不要隨便編
+- 個性：${caseData.personality}
+- 若醫師要做 PE / 抽血 / 影像，只回「好」+「（下一階段再做）」
+- 醫師用模糊詞（「不舒服」）→ 用病人口氣反問澄清一個（「你說『不舒服』是指哪邊？」）
+
+## 病人設定
+- 年齡性別：${caseData.age} 歲 ${caseData.sex}
+- 主訴：${caseData.chiefComplaint}
+- 病史（僅供你查找，只在被問到時才釋出相關那一點）：
+${caseData.historyDetails || caseData.keyDetails || ''}
+
+## 開場
+醫師剛走進診間。只說一句自我介紹 + 主訴（例：「醫師你好，我胸口悶痛兩小時了」）。一句就好，不要多說。之後等醫師問再答。`;
+    }
+
+    // Phase 2：PE 記錄員（英文 SOAP）
+    function buildPEExaminerSystemPrompt(caseData) {
+      const pe = caseData.peFindings || {};
+      const peDump = Object.entries(pe)
+        .filter(([, v]) => v && String(v).trim())
+        .map(([k, v]) => `- ${k}: ${v}`)
+        .join('\n');
+      return `你是臨床推理遊戲 **Phase 2（身體檢查）** 的 PE 記錄員。玩家（醫師）會說要做哪些理學檢查，你只回傳對應的 finding。
+
+## 角色規則
+- **只回英文 SOAP 格式** 的 PE finding（病人才講中文，PE 記錄員是專業 chart entry）
+- 玩家指定什麼就回什麼，**不主動給沒被檢查的部位**
+- 格式：每次回覆 1–4 行，例：
+  "BP 150/90 mmHg, HR 102 bpm, RR 20, Temp 37.0°C, SpO2 96%"
+  "Cardiac: S1S2 regular, no murmur; PMI at 5th ICS MCL"
+- 玩家問的檢查在本 case 不相關或沒特別發現，回 "Within normal limits" 或 "Unremarkable"
+- 玩家問病史（非 PE），回「（這是 Phase 2 身體檢查階段，病史請到前一階段）」
+- 玩家問抽血或影像，回「（請到 Phase 3 檢驗/影像）」
+- **不透露真實診斷**。真實診斷「${caseData.trueDx}」永遠不提、不推理、不加醫學評論
+
+## 本 case PE ground truth（玩家沒問就不給）
+${peDump || '（沒有特殊 PE findings，主要看 vital signs）'}
+
+## 開場
+只回一句：「Phase 2：身體檢查開始。你要檢查什麼？」 — 不舉例、不暗示要問什麼。`;
+    }
+
+    // Phase 3：Lab / Image 報告系統（英文）
+    function buildLabImageSystemPrompt(caseData) {
+      const labs = caseData.labResults || {};
+      const imgs = caseData.imageResults || {};
+      const labDump = Object.entries(labs)
+        .filter(([, v]) => v && String(v).trim())
+        .map(([k, v]) => `- ${k}: ${v}`)
+        .join('\n');
+      const imgDump = Object.entries(imgs)
+        .filter(([, v]) => v && String(v).trim())
+        .map(([k, v]) => `- ${k}: ${v}`)
+        .join('\n');
+      return `你是臨床推理遊戲 **Phase 3（檢驗 / 影像）** 的 Lab/Image 報告系統。玩家（醫師）會 order 檢驗項目或影像，你只回傳對應數值或報告。
+
+## 角色規則
+- **數值用英文 + markdown 表格**；影像 finding 用英文 prose（ECG/CXR/CT 是描述性報告）
+- 玩家 order 什麼就回什麼，不主動給沒 order 的項目
+
+## 輸出格式
+### 驗值：必用 markdown table，欄位 Item / Value / Unit / Flag / Ref
+\`\`\`
+| Item  | Value | Unit | Flag | Ref       |
+|-------|-------|------|------|-----------|
+| WBC   | 12.3  | k/uL | H    | 4–11      |
+| Hb    | 13.5  | g/dL |      | 13–17     |
+| Plt   | 255   | k/uL |      | 150–400   |
+\`\`\`
+Flag 欄：H / L / 空白。沒 Ref 就留空。
+
+### 影像（ECG/CXR/CT/US/MRI 等）：英文 prose 即可，例：
+\`\`\`
+ECG: Sinus rhythm, HR 102. ST elevation 2mm in V1–V4 with reciprocal ST depression in II/III/aVF. No Q waves yet.
+\`\`\`
+
+### 一次 order 多項：每個數值類用一個 table，影像類分段 prose
+### 不相關或 normal：回 "WNL" 或 "Unremarkable"
+### 若玩家問病史或 PE，回「（那是前面階段的，這裡只做檢驗/影像）」
+- **不透露真實診斷**。真實診斷「${caseData.trueDx}」永遠不提、不推理、不加醫學評論
+
+## 本 case Lab ground truth
+${labDump || '（本 case 無特別 lab findings）'}
+
+## 本 case Image ground truth
+${imgDump || '（本 case 無特別 image findings）'}
+
+## 開場
+只回一句：「Phase 3：檢驗 / 影像開始。你要 order 什麼？」 — 不舉例、不暗示。`;
+    }
+
+    // 依當前 phase 選 system prompt
+    function buildSystemPromptForPhase(caseData, phase) {
+      if (phase === 2) return buildPEExaminerSystemPrompt(caseData);
+      if (phase === 3) return buildLabImageSystemPrompt(caseData);
+      return buildPatientSystemPrompt(caseData); // phase 1 預設
+    }
+
+    // ========== API 呼叫 ==========
+    async function callAnthropic(s, systemPrompt, messages, opts = {}) {
+      if (!s.anthropicApiKey) throw new Error('尚未設定 Anthropic 金鑰。請按「⚙ 設定」填入。');
+      const model = currentModel(s);
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': s.anthropicApiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: opts.maxTokens || 400,
+          system: systemPrompt,
+          messages,
+        }),
+      });
+      if (!res.ok) {
+        let msg = `Anthropic API 錯誤 ${res.status}`;
+        try {
+          const err = await res.json();
+          if (err?.error?.message) msg = err.error.message;
+        } catch {}
+        throw new Error(msg);
+      }
+      const data = await res.json();
+      return data?.content?.[0]?.text?.trim() || '(病人沒有回應)';
+    }
+
+    async function callGemini(s, systemPrompt, messages, opts = {}) {
+      if (!s.googleApiKey) throw new Error('尚未設定 Google 金鑰。請按「⚙ 設定」填入。');
+      const model = currentModel(s);
+      // Gemini 格式轉換：assistant -> model；每則訊息用 parts: [{text: ...}]
+      const contents = messages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      }));
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+      const body = {
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents,
+        generationConfig: {
+          maxOutputTokens: opts.maxTokens || 400,
+          temperature: 0.8,
+        },
+      };
+      if (opts.jsonMode) body.generationConfig.responseMimeType = 'application/json';
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': s.googleApiKey,
+        },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        let msg = `Gemini API 錯誤 ${res.status}`;
+        try {
+          const err = await res.json();
+          if (err?.error?.message) msg = err.error.message;
+        } catch {}
+        throw new Error(msg);
+      }
+      const data = await res.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '(病人沒有回應)';
+    }
+
+    async function callModel(systemPrompt, messages, opts = {}) {
+      const s = loadSettings();
+      const provider = s.provider || DEFAULT_PROVIDER;
+      if (provider === 'google') return callGemini(s, systemPrompt, messages, opts);
+      return callAnthropic(s, systemPrompt, messages, opts);
+    }
+
+    // ========== 對話 / 階段狀態 ==========
+    let currentCase = null;
+    let conversation = []; // [{role: 'user'|'assistant', content: string}]
+    let awaitingReply = false;
+    // 四階段狀態
+    const PHASES = {
+      1: { id: 1, name: '問診',       end: '結束問診',       next: 2,       dim: 'history' },
+      2: { id: 2, name: '身體檢查',   end: '結束身體檢查',   next: 3,       dim: 'interp'  },
+      3: { id: 3, name: '檢驗 / 影像', end: '結束檢驗影像',   next: 4,       dim: 'ddx'     },
+      4: { id: 4, name: '處置',       end: '提交處置並結案', next: 'done',  dim: 'mgmt'    },
+    };
+    let currentPhase = 1;
+    let phaseGrades = []; // [{phase, dim, score, feedback, missing}]
+    let ddxHistory = [];  // [{phase, ddxText}]
+
+    function currentRoleLabel() {
+      if (currentPhase === 2) return 'PE 記錄員';
+      if (currentPhase === 3) return '檢驗 / 影像';
+      return '病人';
+    }
+
+    function appendMsg(who, text, opts = {}) {
+      const log = document.getElementById('dialogue-log');
+      // 第一次 append 前清掉空狀態提示
+      const empty = log.querySelector('.empty-state');
+      if (empty) empty.remove();
+
+      const msg = document.createElement('div');
+      msg.className = 'msg ' + who;
+      if (who === 'system-error' || who === 'system-info') {
+        msg.textContent = text;
+      } else {
+        const whoLabel = document.createElement('div');
+        whoLabel.className = 'who';
+        whoLabel.textContent = who === 'doctor'
+          ? '醫師（你）'
+          : (opts.roleLabel || currentRoleLabel());
+        const body = document.createElement('div');
+        if (opts.markdown) {
+          body.innerHTML = renderMessageMarkdown(text);
+        } else {
+          body.textContent = text;
+        }
+        msg.appendChild(whoLabel);
+        msg.appendChild(body);
+      }
+      log.appendChild(msg);
+      log.scrollTop = log.scrollHeight;
+      return msg;
+    }
+
+    // 訊息用輕量 markdown：支援表格 + 換行；其他 inline 原樣（保留 escape）
+    function renderMessageMarkdown(md) {
+      const lines = md.split('\n');
+      const out = [];
+      let i = 0;
+      const splitRow = (l) => {
+        let parts = l.split('|').map(c => c.trim());
+        if (parts.length && parts[0] === '') parts.shift();
+        if (parts.length && parts[parts.length - 1] === '') parts.pop();
+        return parts;
+      };
+      const isSeparator = (l) => /^\|[\s\-|:]+\|?\s*$/.test(l.trim());
+
+      while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        // Markdown table：標頭 + 分隔 + 若干資料列
+        if (trimmed.startsWith('|') && i + 1 < lines.length && isSeparator(lines[i + 1])) {
+          const headers = splitRow(trimmed);
+          i += 2;
+          let html = '<table class="msg-table"><thead><tr>';
+          for (const h of headers) html += `<th>${escapeHtml(h)}</th>`;
+          html += '</tr></thead><tbody>';
+          while (i < lines.length && lines[i].trim().startsWith('|') && !isSeparator(lines[i])) {
+            const cells = splitRow(lines[i].trim());
+            html += '<tr>';
+            for (const c of cells) {
+              const flag = c.trim().toUpperCase();
+              const cls = flag === 'H' ? ' class="flag-h"' :
+                          flag === 'L' ? ' class="flag-l"' : '';
+              html += `<td${cls}>${escapeHtml(c)}</td>`;
+            }
+            html += '</tr>';
+            i++;
+          }
+          html += '</tbody></table>';
+          out.push(html);
+          continue;
+        }
+
+        // 去掉 ``` fence 行（AI 偶爾會包 code fence）
+        if (/^```/.test(trimmed)) { i++; continue; }
+
+        if (trimmed === '') {
+          out.push('<br/>');
+        } else {
+          out.push(escapeHtml(line) + '<br/>');
+        }
+        i++;
+      }
+      return out.join('');
+    }
+
+    function showTypingIndicator() {
+      const log = document.getElementById('dialogue-log');
+      const wrap = document.createElement('div');
+      wrap.className = 'msg patient';
+      wrap.id = 'typing-indicator-row';
+      const whoLabel = document.createElement('div');
+      whoLabel.className = 'who';
+      whoLabel.textContent = '病人';
+      const indicator = document.createElement('div');
+      indicator.className = 'typing-indicator';
+      indicator.innerHTML = '<span></span><span></span><span></span>';
+      wrap.appendChild(whoLabel);
+      wrap.appendChild(indicator);
+      log.appendChild(wrap);
+      log.scrollTop = log.scrollHeight;
+    }
+    function hideTypingIndicator() {
+      const el = document.getElementById('typing-indicator-row');
+      if (el) el.remove();
+    }
+
+    function resetDialogueLog() {
+      const log = document.getElementById('dialogue-log');
+      log.innerHTML = '';
+    }
+
+    function renderCaseInfo(c) {
+      const info = document.getElementById('case-info');
+      document.getElementById('case-number').textContent = c.id;
+      document.getElementById('patient-intro').textContent = `${c.age} 歲 ${c.sex}`;
+      document.getElementById('chief-complaint').textContent = c.chiefComplaint;
+      info.classList.remove('hidden');
+      updatePhaseUI();
+    }
+
+    function updatePhaseUI() {
+      const ph = PHASES[currentPhase];
+      const badge = document.getElementById('phase-indicator');
+      if (ph) {
+        badge.textContent = `Phase ${ph.id}｜${ph.name}`;
+        badge.style.background = 'var(--secondary)';
+      } else {
+        badge.textContent = '✅ 結案';
+        badge.style.background = 'var(--success)';
+      }
+      const btn = document.getElementById('end-phase-btn');
+      if (ph) {
+        btn.textContent = `✋ ${ph.end}`;
+        btn.disabled = !currentCase || currentCase.graded;
+      } else {
+        btn.textContent = '✅ 已結案';
+        btn.disabled = true;
+      }
+    }
+
+    // Round 1 佔位：階段切換（Round 2 會插入「評分 + DDx 提交」modal）
+    async function advancePhase() {
+      if (!currentCase) return;
+      if (awaitingReply) return;
+
+      const current = PHASES[currentPhase];
+      if (!current) return;
+      const next = current.next;
+
+      // Phase 4 結案：Round 2 才做真正的處置 modal，目前先提示
+      if (next === 'done') {
+        appendMsg('system-info', '（Phase 4 處置評分 Round 2 才接上，這輪先放佔位）');
+        return;
+      }
+
+      // 切換到下一個 phase
+      currentPhase = next;
+      const newPhase = PHASES[currentPhase];
+      appendMsg('system-info', `—— 進入 Phase ${newPhase.id}：${newPhase.name} ——`);
+
+      // 換 AI 身份開場：給一個 dummy user 訊息觸發 AI 新身份自我介紹
+      awaitingReply = true;
+      showTypingIndicator();
+      try {
+        const opener = await callModel(
+          buildSystemPromptForPhase(currentCase, currentPhase),
+          [{ role: 'user', content: `（進入 Phase ${newPhase.id}：${newPhase.name}）` }]
+        );
+        conversation.push({ role: 'user', content: `（進入 Phase ${newPhase.id}：${newPhase.name}）` });
+        conversation.push({ role: 'assistant', content: opener });
+        hideTypingIndicator();
+        appendMsg('patient', opener, { markdown: currentPhase === 3 });
+      } catch (e) {
+        hideTypingIndicator();
+        appendMsg('system-error', '⚠ ' + e.message);
+      } finally {
+        awaitingReply = false;
+        updatePhaseUI();
+      }
+    }
+
+    async function startNewCase(forceOrganId) {
+      const s = loadSettings();
+      if (!currentApiKey(s)) {
+        openSettingsModal();
+        return;
+      }
+
+      // 若已有 case 且已問過幾輪，確認才覆蓋
+      if (currentCase && conversation.length > 2) {
+        if (!confirm('目前的 case 還在進行中，確定要放棄、開新 case？')) return;
+      }
+
+      // 重設畫面與階段狀態
+      conversation = [];
+      currentCase = null;
+      currentPhase = 1;
+      phaseGrades = [];
+      ddxHistory = [];
+      resetDialogueLog();
+      document.getElementById('case-info').classList.add('hidden');
+
+      // 禁用問診相關按鈕（等 case 生成完才啟用）
+      els.doctorInput.disabled = true;
+      els.sendBtn.disabled = true;
+      els.diagnoseBtn.disabled = true;
+      els.summaryBtn.disabled = true;
+      els.hintBtn.disabled = true;
+
+      // 生成階段
+      awaitingReply = true;
+      showGeneratingMsg('等待病人中...');
+      try {
+        currentCase = await generateCase(forceOrganId);
+      } catch (e) {
+        hideGeneratingMsg();
+        appendMsg('system-error', '⚠ case 生成失敗：' + e.message + '（請再按一次「開新 Case」重試）');
+        awaitingReply = false;
+        return;
+      }
+      hideGeneratingMsg();
+      renderCaseInfo(currentCase);
+
+      // 啟用互動
+      els.doctorInput.disabled = false;
+      els.sendBtn.disabled = false;
+      els.diagnoseBtn.disabled = false;
+      els.summaryBtn.disabled = false;
+      els.hintBtn.disabled = false;
+      els.endPhaseBtn.disabled = false;
+      els.doctorInput.focus();
+
+      // 病人開口講第一句（Phase 1 起點）
+      showTypingIndicator();
+      try {
+        const firstLine = await callModel(
+          buildSystemPromptForPhase(currentCase, currentPhase),
+          [{ role: 'user', content: '（醫師剛走進診間，坐下看著你）' }]
+        );
+        conversation.push({ role: 'user', content: '（醫師剛走進診間，坐下看著你）' });
+        conversation.push({ role: 'assistant', content: firstLine });
+        hideTypingIndicator();
+        appendMsg('patient', firstLine);
+      } catch (e) {
+        hideTypingIndicator();
+        appendMsg('system-error', '⚠ ' + e.message);
+      } finally {
+        awaitingReply = false;
+      }
+    }
+
+    async function sendDoctorMessage() {
+      if (awaitingReply) return;
+      const text = els.doctorInput.value.trim();
+      if (!text) return;
+      if (!currentCase) {
+        appendMsg('system-error', '⚠ 請先按「🎲 開新 Case」開始問診');
+        return;
+      }
+      els.doctorInput.value = '';
+      appendMsg('doctor', text);
+      conversation.push({ role: 'user', content: text });
+
+      awaitingReply = true;
+      showTypingIndicator();
+      try {
+        const reply = await callModel(buildSystemPromptForPhase(currentCase, currentPhase), conversation);
+        conversation.push({ role: 'assistant', content: reply });
+        hideTypingIndicator();
+        appendMsg('patient', reply, { markdown: currentPhase === 3 });
+      } catch (e) {
+        hideTypingIndicator();
+        appendMsg('system-error', '⚠ ' + e.message);
+      } finally {
+        awaitingReply = false;
+        els.doctorInput.focus();
+      }
+    }
+
+    // ========== 彙整問診 ==========
+    function buildSummarySystemPrompt() {
+      return `你是一位臨床教學助理。根據下方「醫師與病人的對話」，把醫師目前已經問到的臨床資訊整理成結構化的問診摘要。
+
+## 輸出格式（嚴格按此章節順序，沒問到的直接標「（尚未詢問）」）
+### 主訴 (CC)
+### 現在病史 (HPI)
+#### 症狀特徵（部位、性質、強度）
+#### 時間序（何時開始、進展、頻率）
+#### 加重 / 緩解因子
+#### 相關症狀
+### 既往病史 (PMH)
+### 用藥與過敏
+### 家族史
+### 社會史（抽菸、喝酒、職業、旅遊、性生活等）
+### 理學檢查 (PE)
+### 檢驗 / 影像
+
+## 規則
+- 嚴格限定在上面章節，不要多寫結語、不要加提示或建議
+- 沒問到的內容就寫「（尚未詢問）」，不可依主訴自己腦補
+- 只如實反映對話裡出現過的資訊
+- 用繁體中文輸出，使用 Markdown 標題（### / ####）與 - 清單符號`;
+    }
+
+    function buildHintSystemPrompt(caseData) {
+      return `你是臨床推理遊戲的 AI 教練。玩家是住院醫師，正在問診一位病人，需要你提示下一步問診方向。
+
+## 案例資訊
+- 病人基本：${caseData.age} 歲 ${caseData.sex}
+- 主訴：${caseData.chiefComplaint}
+- 真實診斷（你知道、但不可直接說出病名或明示）：${caseData.trueDx}
+
+## 提示輸出規則
+- 給 3–5 條 bullet（- 開頭），每條 1–2 句
+- 開頭一句話「還可以往這些方向問：」之後直接列 bullet，結尾不要總結、不要加鼓勵語
+- **嚴禁**：直接說出診斷名稱、說「排除 X 疾病」、說「典型表現是 X」、使用引導至特定 diagnosis 的字眼
+- **允許**：
+  - 提醒問症狀細節（部位、性質、放射、時間序、加重/緩解）
+  - 指出可深入詢問的風險因子或過去史面向
+  - 指出哪些相關系統（ROS）還沒問
+  - 建議可考慮的理學檢查 / 基礎檢驗方向
+- 用繁體中文、Markdown bullet（- 開頭）`;
+    }
+
+    // 把對話轉成純文字（跳過第一則開場 dummy）
+    function dialogueAsText() {
+      return conversation
+        .filter((m, i) => !(i === 0 && m.content.startsWith('（醫師')))
+        .map(m => (m.role === 'user' ? '醫師' : '病人') + '：' + m.content)
+        .join('\n\n');
+    }
+
+    async function summarizeConversation() {
+      if (!currentCase) {
+        appendMsg('system-error', '⚠ 請先開一個 case 才能彙整');
+        return;
+      }
+      const dialogue = dialogueAsText();
+      if (!dialogue.trim()) {
+        appendMsg('system-error', '⚠ 還沒問任何問題，沒東西可彙整');
+        return;
+      }
+
+      openInfoModal('📝 問診彙整');
+
+      const userMsg = `## 病人基本資訊
+年齡性別：${currentCase.age} 歲 ${currentCase.sex}
+主訴：${currentCase.chiefComplaint}
+
+## 對話紀錄
+${dialogue}`;
+
+      try {
+        const md = await callModel(buildSummarySystemPrompt(), [
+          { role: 'user', content: userMsg },
+        ]);
+        renderSummaryMarkdown(md);
+      } catch (e) {
+        document.getElementById('summary-content').innerHTML =
+          `<div style="color: var(--danger);">⚠ ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function giveHints() {
+      if (!currentCase) {
+        appendMsg('system-error', '⚠ 請先開一個 case 才能看提示');
+        return;
+      }
+      const dialogue = dialogueAsText();
+
+      openInfoModal('💡 提示');
+
+      const userMsg = dialogue.trim()
+        ? `## 目前問診對話\n${dialogue}\n\n根據以上對話，請給下一步問診方向的提示。`
+        : `玩家還沒開始問診。請提示他第一步可以從哪裡切入（主訴是「${currentCase.chiefComplaint}」）。`;
+
+      try {
+        const md = await callModel(buildHintSystemPrompt(currentCase), [
+          { role: 'user', content: userMsg },
+        ]);
+        renderSummaryMarkdown(md);
+      } catch (e) {
+        document.getElementById('summary-content').innerHTML =
+          `<div style="color: var(--danger);">⚠ ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    // 極簡 markdown 渲染：####/### 標題、- 清單、空行、段落
+    function renderSummaryMarkdown(md) {
+      const lines = md.split('\n');
+      const out = [];
+      let inList = false;
+      const closeList = () => { if (inList) { out.push('</ul>'); inList = false; } };
+
+      for (const raw of lines) {
+        const line = raw.trimEnd();
+        if (/^####\s+/.test(line)) {
+          closeList();
+          out.push(`<h4>${escapeHtml(line.replace(/^####\s+/, ''))}</h4>`);
+        } else if (/^###\s+/.test(line)) {
+          closeList();
+          out.push(`<h3>${escapeHtml(line.replace(/^###\s+/, ''))}</h3>`);
+        } else if (/^##\s+/.test(line)) {
+          closeList();
+          out.push(`<h3>${escapeHtml(line.replace(/^##\s+/, ''))}</h3>`);
+        } else if (/^-\s+/.test(line)) {
+          if (!inList) { out.push('<ul>'); inList = true; }
+          const content = escapeHtml(line.replace(/^-\s+/, ''));
+          out.push(`<li>${content}</li>`);
+        } else if (line.trim() === '') {
+          closeList();
+        } else {
+          closeList();
+          let p = escapeHtml(line);
+          if (p.includes('（尚未詢問）')) p = `<span class="gap">${p}</span>`;
+          out.push(`<p>${p}</p>`);
+        }
+      }
+      closeList();
+      document.getElementById('summary-content').innerHTML = out.join('\n');
+    }
+
+    function openInfoModal(title) {
+      const header = document.querySelector('#summary-overlay .modal-header h3');
+      if (header && title) header.textContent = title;
+      document.getElementById('summary-content').innerHTML =
+        `<div style="text-align:center; color: var(--text-dim); padding: 2rem 0;">
+          <div class="typing-indicator" style="justify-content:center;"><span></span><span></span><span></span></div>
+          <div style="margin-top:0.5rem; font-size: 0.85rem;">處理中...</div>
+        </div>`;
+      document.getElementById('summary-overlay').classList.remove('hidden');
+    }
+    function closeSummaryModal() {
+      document.getElementById('summary-overlay').classList.add('hidden');
+    }
+    async function copySummaryToClipboard() {
+      const el = document.getElementById('summary-content');
+      const text = el.innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+        const btn = document.getElementById('summary-copy-btn');
+        const orig = btn.textContent;
+        btn.textContent = '✓ 已複製';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      } catch {
+        alert('複製失敗，請手動反白複製。');
+      }
+    }
+
+    // ========== 下診斷 + 評分 ==========
+    function buildGradingSystemPrompt(caseData) {
+      return `你是臨床推理遊戲的評分員。根據下方「案例真相」、「玩家問診對話」與「玩家診斷提交」，為玩家（住院醫師 R3 等級）打分。
+
+## 案例真相
+- 真實診斷：${caseData.trueDx}
+- 主訴：${caseData.chiefComplaint}
+- 病人基本：${caseData.age} 歲 ${caseData.sex}
+- 病人背景資料：
+${caseData.keyDetails}
+
+## 評分維度（每項 0–5 分）
+1. history（問診）：有沒有問到與真實診斷相關的關鍵病史（HPI/PMH/家族/社會/用藥/ROS）？
+2. interp（判讀）：有沒有適當要求或解讀 PE / lab / 影像？
+3. ddx（鑑別診斷）：玩家列的 DDx 是否完整合理、有涵蓋真實診斷？
+4. mgmt（處置）：治療計畫是否對應真實診斷、有沒有漏掉重要的 acute management？
+
+## 評分刻度
+- 0：完全沒做或嚴重錯誤
+- 1：明顯不足
+- 2：基礎過關
+- 3：尚可但有漏
+- 4：完整紮實
+- 5：優秀、有教學亮點
+
+## 輸出格式（嚴格 JSON，不要 markdown code fence）
+{
+  "scores": {
+    "history": <0-5>,
+    "interp": <0-5>,
+    "ddx": <0-5>,
+    "mgmt": <0-5>
+  },
+  "trueDx": "${caseData.trueDx}",
+  "diagnosisHit": <true 或 false>,
+  "feedback": {
+    "history": "<1-2 句具體 feedback，指出做對什麼、漏了什麼>",
+    "interp": "<1-2 句>",
+    "ddx": "<1-2 句>",
+    "mgmt": "<1-2 句>"
+  },
+  "keyLearnings": ["<教學重點 1>", "<教學重點 2>", "<教學重點 3>"]
+}
+
+## diagnosisHit 判定
+- 若玩家最終診斷與真實診斷同義或幾乎等價（例：STEMI = 急性 ST 段上升心肌梗塞），算 true
+- 若只是相關大方向（例：只說 ACS 但真 Dx 是 STEMI），算 false（但 ddx 分數可以高）
+- 完全錯方向：false + 低 ddx 分數
+
+用繁體中文寫 feedback 和 keyLearnings。只輸出 JSON。`;
+    }
+
+    function buildGradingUserMsg(dialogueText, submission) {
+      return `## 玩家的問診對話
+${dialogueText || '（沒有問任何問題）'}
+
+## 玩家的診斷提交
+- 鑑別診斷 (DDx)：
+${submission.ddx || '（未提供）'}
+- 最終診斷 (Final Dx)：${submission.finalDx}
+- 治療 / 處置計畫：
+${submission.plan || '（未提供）'}
+
+請依 system prompt 的規則評分。只回 JSON。`;
+    }
+
+    function validateGrading(g) {
+      if (!g || typeof g !== 'object') throw new Error('grading 不是物件');
+      if (!g.scores || typeof g.scores !== 'object') throw new Error('缺 scores');
+      for (const d of DIMENSIONS) {
+        const s = g.scores[d.id];
+        if (typeof s !== 'number' || s < 0 || s > 5) {
+          throw new Error(`scores.${d.id} 無效（${s}）`);
+        }
+      }
+      if (typeof g.diagnosisHit !== 'boolean') throw new Error('缺 diagnosisHit');
+      return g;
+    }
+
+    function applyGradingXP(grading, organId) {
+      for (const dim of DIMENSIONS) {
+        const score = grading.scores[dim.id] || 0;
+        if (score > 0) {
+          state.stats[organId][dim.id] = Math.max(
+            0,
+            (state.stats[organId][dim.id] || 0) + score
+          );
+        }
+      }
+      state.totalCases = (state.totalCases || 0) + 1;
+      saveState(state);
+      renderStats();
+    }
+
+    // ----- Modal 三種狀態的 render -----
+    function renderDiagnoseForm(prefill = {}) {
+      document.getElementById('diagnose-title').textContent = '📋 下診斷';
+      document.getElementById('diagnose-body').innerHTML = `
+        <div>
+          <label for="diag-ddx">鑑別診斷 (DDx) <span style="color:var(--text-dim); font-weight:400;">— 建議 3–5 個</span></label>
+          <textarea id="diag-ddx" rows="3" placeholder="每行一個，例：&#10;1. 急性心肌梗塞&#10;2. 不穩定型心絞痛&#10;3. 胃食道逆流">${escapeHtml(prefill.ddx || '')}</textarea>
+        </div>
+        <div>
+          <label for="diag-final">最終診斷 (Final Dx) <span style="color:var(--danger); font-weight:400;">*必填</span></label>
+          <input type="text" id="diag-final" placeholder="例：急性 ST 段上升心肌梗塞（STEMI）" value="${escapeHtml(prefill.finalDx || '')}" />
+        </div>
+        <div>
+          <label for="diag-plan">治療 / 處置計畫 <span style="color:var(--text-dim); font-weight:400;">（選填）</span></label>
+          <textarea id="diag-plan" rows="3" placeholder="例：&#10;- 檢查：EKG、cardiac enzymes&#10;- 藥物：aspirin + heparin&#10;- 急處置：送 cath lab 準備 PCI">${escapeHtml(prefill.plan || '')}</textarea>
+        </div>
+      `;
+      document.getElementById('diagnose-footer').innerHTML = `
+        <button class="secondary" id="diagnose-cancel-btn">取消</button>
+        <button id="diagnose-submit-btn">提交評分</button>
+      `;
+      document.getElementById('diagnose-cancel-btn').addEventListener('click', closeDiagnoseModal);
+      document.getElementById('diagnose-submit-btn').addEventListener('click', submitDiagnosis);
+      setTimeout(() => document.getElementById('diag-ddx')?.focus(), 0);
+    }
+
+    function renderDiagnoseLoading() {
+      document.getElementById('diagnose-title').textContent = '📋 評分中...';
+      document.getElementById('diagnose-body').innerHTML = `
+        <div style="text-align:center; padding: 2.5rem 0; color: var(--text-dim);">
+          <div class="typing-indicator" style="justify-content:center; margin-bottom:0.5rem;">
+            <span></span><span></span><span></span>
+          </div>
+          <div style="font-size: 0.9rem;">AI 評分員審閱中，請稍候...</div>
+        </div>
+      `;
+      document.getElementById('diagnose-footer').innerHTML = '';
+    }
+
+    function renderDiagnoseResult(grading, playerFinalDx, organId) {
+      document.getElementById('diagnose-title').textContent = '📋 評分結果';
+      const organ = ORGANS.find(o => o.id === organId);
+      const totalXP = Object.values(grading.scores).reduce((a, b) => a + b, 0);
+      const hit = grading.diagnosisHit === true;
+
+      let html = '';
+      html += hit
+        ? `<div class="grade-banner hit">✅ 命中！
+            <div class="grade-dx">你的診斷：<strong>${escapeHtml(playerFinalDx)}</strong></div>
+            <div class="grade-dx">實際診斷：<strong>${escapeHtml(grading.trueDx)}</strong></div>
+           </div>`
+        : `<div class="grade-banner miss">❌ 未命中
+            <div class="grade-dx">你的診斷：${escapeHtml(playerFinalDx)}</div>
+            <div class="grade-dx">實際診斷：<strong>${escapeHtml(grading.trueDx)}</strong></div>
+           </div>`;
+
+      html += '<div>';
+      for (const dim of DIMENSIONS) {
+        const score = grading.scores[dim.id] ?? 0;
+        const fb = grading.feedback?.[dim.id] || '';
+        const pct = (score / 5) * 100;
+        html += `
+          <div class="grade-row">
+            <div class="grade-row-top">
+              <span class="grade-dim-name">${dim.name}</span>
+              <span class="grade-score">${score} / 5</span>
+            </div>
+            <div class="grade-bar-track"><div class="grade-bar-fill" style="width:${pct}%"></div></div>
+            ${fb ? `<div class="grade-fb">${escapeHtml(fb)}</div>` : ''}
+          </div>
+        `;
+      }
+      html += '</div>';
+
+      if (Array.isArray(grading.keyLearnings) && grading.keyLearnings.length) {
+        html += '<div class="grade-learnings"><h4>💡 教學重點</h4><ul>';
+        for (const kl of grading.keyLearnings) {
+          html += `<li>${escapeHtml(kl)}</li>`;
+        }
+        html += '</ul></div>';
+      }
+
+      html += `<div class="grade-xp-summary">
+        總共獲得 <strong>+${totalXP}</strong> XP 計入 ${organ ? organ.icon + ' ' + organ.name : '未知科別'}
+      </div>`;
+
+      document.getElementById('diagnose-body').innerHTML = html;
+      document.getElementById('diagnose-footer').innerHTML = `
+        <button id="diagnose-done-btn">關閉</button>
+      `;
+      document.getElementById('diagnose-done-btn').addEventListener('click', closeDiagnoseModal);
+    }
+
+    // ----- Modal 開關 -----
+    function openDiagnoseModal() {
+      if (!currentCase) {
+        appendMsg('system-error', '⚠ 請先按「🛎️ 看新病人」開一個 case');
+        return;
+      }
+      if (currentCase.graded) {
+        appendMsg('system-info', 'ℹ️ 這個 case 已評分過了。請按「🛎️ 看新病人」開新一場');
+        return;
+      }
+      renderDiagnoseForm();
+      document.getElementById('diagnose-overlay').classList.remove('hidden');
+    }
+
+    function closeDiagnoseModal() {
+      document.getElementById('diagnose-overlay').classList.add('hidden');
+    }
+
+    async function submitDiagnosis() {
+      const finalDx = document.getElementById('diag-final').value.trim();
+      const ddx = document.getElementById('diag-ddx').value.trim();
+      const plan = document.getElementById('diag-plan').value.trim();
+      if (!finalDx) {
+        alert('請填「最終診斷」後再提交');
+        return;
+      }
+      if (!currentCase) {
+        alert('沒有進行中的 case');
+        closeDiagnoseModal();
+        return;
+      }
+
+      renderDiagnoseLoading();
+      const submission = { ddx, finalDx, plan };
+
+      try {
+        const userMsg = buildGradingUserMsg(dialogueAsText(), submission);
+        const raw = await callModel(
+          buildGradingSystemPrompt(currentCase),
+          [{ role: 'user', content: userMsg }],
+          { maxTokens: 1500, jsonMode: true }
+        );
+        const grading = extractJson(raw);
+        validateGrading(grading);
+
+        // 套 XP、計場次、鎖定本 case
+        applyGradingXP(grading, currentCase.organ);
+        currentCase.graded = true;
+
+        // 問診相關按鈕鎖定（case 已結案）
+        els.doctorInput.disabled = true;
+        els.sendBtn.disabled = true;
+        els.diagnoseBtn.disabled = true;
+        els.hintBtn.disabled = true;
+        // summary 仍可用（方便回顧）
+
+        // 對話區留下紀錄
+        const totalXP = Object.values(grading.scores).reduce((a, b) => a + b, 0);
+        const organ = ORGANS.find(o => o.id === currentCase.organ);
+        appendMsg(
+          'system-info',
+          `✨ 本場結案｜真實診斷：${grading.trueDx}｜+${totalXP} XP → ${organ ? organ.icon + ' ' + organ.name : ''}`
+        );
+
+        // 顯示結果
+        renderDiagnoseResult(grading, finalDx, currentCase.organ);
+      } catch (e) {
+        console.error('[Clinic RPG] 評分失敗：', e);
+        alert('評分失敗：' + e.message + '（欄位保留，請再次提交）');
+        renderDiagnoseForm({ ddx, finalDx, plan });
+      }
+    }
+
+    // ========== 選科別 Picker ==========
+    function openOrganPicker() {
+      const s = loadSettings();
+      if (!currentApiKey(s)) {
+        openSettingsModal();
+        return;
+      }
+      const grid = document.getElementById('organ-pick-grid');
+      grid.innerHTML = '';
+      for (const o of ORGANS) {
+        const btn = document.createElement('button');
+        btn.className = 'organ-pick-btn';
+        btn.innerHTML = `<span class="organ-pick-icon">${o.icon}</span><span>${o.name}</span>`;
+        btn.addEventListener('click', () => {
+          closeOrganPicker();
+          startNewCase(o.id);
+        });
+        grid.appendChild(btn);
+      }
+      document.getElementById('organ-picker-overlay').classList.remove('hidden');
+    }
+    function closeOrganPicker() {
+      document.getElementById('organ-picker-overlay').classList.add('hidden');
+    }
+
+    // ========== Modal ==========
+    function populateModelSelect(provider, selectedModel) {
+      const sel = document.getElementById('model-select');
+      sel.innerHTML = '';
+      const list = MODELS[provider] || MODELS.anthropic;
+      for (const m of list) {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.label;
+        sel.appendChild(opt);
+      }
+      if (selectedModel && list.some(m => m.id === selectedModel)) {
+        sel.value = selectedModel;
+      } else {
+        sel.value = DEFAULT_MODEL[provider];
+      }
+    }
+
+    function updateProviderHint(provider) {
+      document.querySelectorAll('.provider-hint').forEach(el => {
+        el.classList.toggle('active', el.dataset.provider === provider);
+      });
+      const ph = document.getElementById('api-key-input');
+      ph.placeholder = provider === 'google' ? 'AIza...' : 'sk-ant-...';
+    }
+
+    function openSettingsModal() {
+      const s = loadSettings();
+      const provider = s.provider || DEFAULT_PROVIDER;
+      document.getElementById('provider-select').value = provider;
+      document.getElementById('api-key-input').value =
+        provider === 'google' ? (s.googleApiKey || '') : (s.anthropicApiKey || '');
+      populateModelSelect(provider, s.model);
+      updateProviderHint(provider);
+      document.getElementById('modal-overlay').classList.remove('hidden');
+      document.getElementById('api-key-input').focus();
+    }
+
+    function onProviderChangeInModal() {
+      const provider = document.getElementById('provider-select').value;
+      const s = loadSettings();
+      // 切換時帶入該 provider 已儲存的 key（避免覆蓋另一家）
+      document.getElementById('api-key-input').value =
+        provider === 'google' ? (s.googleApiKey || '') : (s.anthropicApiKey || '');
+      populateModelSelect(provider, provider === (s.provider || DEFAULT_PROVIDER) ? s.model : null);
+      updateProviderHint(provider);
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('modal-overlay').classList.add('hidden');
+    }
+
+    function saveSettingsFromModal() {
+      const provider = document.getElementById('provider-select').value;
+      const keyInput = document.getElementById('api-key-input').value.trim();
+      const model = document.getElementById('model-select').value;
+      const prev = loadSettings();
+      const next = {
+        ...prev,
+        provider,
+        model,
+        // 只更新當前 provider 的 key，另一家保留
+        anthropicApiKey: provider === 'anthropic' ? keyInput : (prev.anthropicApiKey || ''),
+        googleApiKey:    provider === 'google'    ? keyInput : (prev.googleApiKey || ''),
+      };
+      saveSettings(next);
+      settings = next;
+      closeSettingsModal();
+    }
+
+    // ========== 事件綁定 ==========
     const els = {
       newCaseBtn: document.getElementById('new-case-btn'),
       diagnoseBtn: document.getElementById('diagnose-btn'),
@@ -471,21 +2152,58 @@
       doctorInput: document.getElementById('doctor-input'),
       devAddBtn: document.getElementById('dev-add-btn'),
       devResetBtn: document.getElementById('dev-reset-btn'),
+      modalOverlay: document.getElementById('modal-overlay'),
+      modalCloseBtn: document.getElementById('modal-close-btn'),
+      modalCancelBtn: document.getElementById('modal-cancel-btn'),
+      modalSaveBtn: document.getElementById('modal-save-btn'),
+      providerSelect: document.getElementById('provider-select'),
+      summaryBtn: document.getElementById('summary-btn'),
+      hintBtn: document.getElementById('hint-btn'),
+      endPhaseBtn: document.getElementById('end-phase-btn'),
+      summaryOverlay: document.getElementById('summary-overlay'),
+      summaryCloseBtn: document.getElementById('summary-close-btn'),
+      summaryDoneBtn: document.getElementById('summary-done-btn'),
+      summaryCopyBtn: document.getElementById('summary-copy-btn'),
     };
+    els.providerSelect.addEventListener('change', onProviderChangeInModal);
+    els.summaryBtn.addEventListener('click', summarizeConversation);
+    els.hintBtn.addEventListener('click', giveHints);
+    els.endPhaseBtn.addEventListener('click', advancePhase);
+    els.summaryCloseBtn.addEventListener('click', closeSummaryModal);
+    els.summaryDoneBtn.addEventListener('click', closeSummaryModal);
+    els.summaryCopyBtn.addEventListener('click', copySummaryToClipboard);
+    els.summaryOverlay.addEventListener('click', (e) => {
+      if (e.target === els.summaryOverlay) closeSummaryModal();
+    });
 
-    els.newCaseBtn.addEventListener('click', () => {
-      alert('開新 Case — Step 4 會接 AI 生成。現在是骨架。');
+    els.newCaseBtn.addEventListener('click', openOrganPicker);
+    document.getElementById('organ-picker-close-btn').addEventListener('click', closeOrganPicker);
+    document.getElementById('organ-picker-overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'organ-picker-overlay') closeOrganPicker();
     });
-    els.diagnoseBtn.addEventListener('click', () => {
-      alert('下診斷 — Step 5 會做評分結算。');
+    document.getElementById('pick-random-btn').addEventListener('click', () => {
+      closeOrganPicker();
+      startNewCase();
     });
-    els.settingsBtn.addEventListener('click', () => {
-      alert('設定（API 金鑰）— Step 3 會加。');
+    els.diagnoseBtn.addEventListener('click', openDiagnoseModal);
+    document.getElementById('diagnose-close-btn').addEventListener('click', closeDiagnoseModal);
+    document.getElementById('diagnose-overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'diagnose-overlay') closeDiagnoseModal();
     });
-    els.sendBtn.addEventListener('click', () => {
-      const text = els.doctorInput.value.trim();
-      if (!text) return;
-      alert('問診 — Step 3 會接 AI。\n你打的：' + text);
+    els.settingsBtn.addEventListener('click', openSettingsModal);
+    els.sendBtn.addEventListener('click', sendDoctorMessage);
+    els.doctorInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendDoctorMessage();
+      }
+    });
+
+    els.modalCloseBtn.addEventListener('click', closeSettingsModal);
+    els.modalCancelBtn.addEventListener('click', closeSettingsModal);
+    els.modalSaveBtn.addEventListener('click', saveSettingsFromModal);
+    els.modalOverlay.addEventListener('click', (e) => {
+      if (e.target === els.modalOverlay) closeSettingsModal();
     });
 
     // 開發用測試按鈕（Step 5 接上 AI 評分後可移除）
@@ -504,7 +2222,18 @@
 
     // 初始渲染
     renderStats();
-    console.log('[Clinic RPG v0.2] 屬性表已載入', state);
+
+    // 首次進來沒當前 provider 的 key 時，輕推一下（不打擾，只 console 提示）
+    {
+      const s = loadSettings();
+      if (!currentApiKey(s)) {
+        console.log('[Clinic RPG] 還沒設定 API 金鑰，按右下「⚙ 設定」開始。');
+      }
+      console.log('[Clinic RPG v0.3.1] 多 provider（Claude/Gemini）已載入', {
+        provider: s.provider || DEFAULT_PROVIDER,
+        model: currentModel(s),
+      });
+    }
   </script>
 </body>
 </html>
