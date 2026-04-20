@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clinic RPG — 臨床推理養成</title>
+  <style>
+    :root {
+      --primary: #1F4E79;
+      --secondary: #2A9D8F;
+      --bg: #F5F9FC;
+      --panel: #FFFFFF;
+      --panel-light: #EAF2F8;
+      --border: #D6E2EC;
+      --text: #1E2A35;
+      --text-dim: #5B6B79;
+      --accent: #4CC9F0;
+      --accent-hover: #38B6DD;
+      --success: #43AA8B;
+      --warning: #F4A261;
+      --danger: #E76F51;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Inter", "Noto Sans TC", -apple-system, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    header {
+      background: var(--panel);
+      border-bottom: 2px solid var(--primary);
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(31, 78, 121, 0.06);
+    }
+    header h1 {
+      font-size: 1.4rem;
+      color: var(--primary);
+      letter-spacing: 0.05em;
+    }
+    header .tagline {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(31, 78, 121, 0.04);
+    }
+    section h2 {
+      font-size: 1rem;
+      color: var(--secondary);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+    /* 屬性表 */
+    #stats-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .stat-card {
+      background: var(--panel-light);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      transition: border-color 0.15s;
+    }
+    .stat-card:hover {
+      border-color: var(--secondary);
+    }
+    .stat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.5rem;
+    }
+    .stat-card-name {
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .stat-card-icon { margin-right: 0.3rem; }
+    .stat-card-total {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+    .stat-row {
+      display: grid;
+      grid-template-columns: 2.5rem 2rem 1fr;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      margin-bottom: 0.25rem;
+    }
+    .stat-row:last-child { margin-bottom: 0; }
+    .stat-dim-label {
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+    .stat-lv {
+      color: var(--primary);
+      font-weight: 600;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .lv-bar-track {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .lv-bar-fill {
+      background: linear-gradient(90deg, var(--secondary), var(--accent));
+      height: 100%;
+      transition: width 0.3s ease-out;
+    }
+    .stats-footer {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+    .dev-btn {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px dashed var(--border);
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+      border-radius: 4px;
+    }
+    .dev-btn:hover {
+      background: var(--panel-light);
+      color: var(--text);
+    }
+    /* 對話區 */
+    #dialogue-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 500px;
+    }
+    #case-info {
+      background: var(--panel-light);
+      border-left: 3px solid var(--secondary);
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    #case-info.hidden { display: none; }
+    #case-info .chief-complaint {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    #dialogue-log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem 0;
+      max-height: 400px;
+    }
+    .msg {
+      margin-bottom: 0.75rem;
+      padding: 0.6rem 0.9rem;
+      border-radius: 6px;
+      line-height: 1.5;
+    }
+    .msg.doctor {
+      background: var(--primary);
+      color: #fff;
+      margin-left: 2rem;
+    }
+    .msg.patient {
+      background: var(--panel-light);
+      color: var(--text);
+      margin-right: 2rem;
+    }
+    .msg .who {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-bottom: 0.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .msg.doctor .who { color: rgba(255,255,255,0.75); }
+    #input-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+    }
+    #input-bar input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 0.8rem;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    #input-bar input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    #input-bar input:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    button:hover { background: var(--accent-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    button.secondary:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    #control-bar {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    /* 空狀態 */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-dim);
+    }
+    .empty-state .big {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⚕ CLINIC RPG</h1>
+    <div class="tagline">臨床推理養成 · v0.1 骨架</div>
+  </header>
+
+  <main>
+    <!-- 左欄：屬性表 -->
+    <section id="stats-panel">
+      <h2>📊 臨床能力屬性表</h2>
+      <div id="stats-container"></div>
+      <div class="stats-footer">
+        <span>共 <span id="total-cases">0</span> 場 · 總 XP <span id="total-xp">0</span></span>
+        <span>
+          <button class="dev-btn" id="dev-add-btn" title="隨機加 1 XP（測試用）">+XP</button>
+          <button class="dev-btn" id="dev-reset-btn" title="清空屬性表">重置</button>
+        </span>
+      </div>
+    </section>
+
+    <!-- 右欄：遊戲主畫面 -->
+    <section id="dialogue-panel">
+      <h2>🩺 問診區</h2>
+
+      <div id="case-info" class="hidden">
+        <div>Case #<span id="case-number">0</span></div>
+        <div>病人：<span id="patient-intro">-</span></div>
+        <div class="chief-complaint">主訴：<span id="chief-complaint">-</span></div>
+      </div>
+
+      <div id="dialogue-log">
+        <div class="empty-state">
+          <div class="big">🏥</div>
+          <div>還沒開 case。按「開新 case」按鈕開始問診。</div>
+          <div style="font-size: 0.8rem; margin-top: 0.5rem;">（Step 3–4 會接 AI，現在只是骨架）</div>
+        </div>
+      </div>
+
+      <div id="input-bar">
+        <input type="text" id="doctor-input" placeholder="輸入你想問的問題（例：什麼時候開始的？）..." disabled />
+        <button id="send-btn" disabled>送出</button>
+      </div>
+
+      <div id="control-bar">
+        <button id="new-case-btn">🎲 開新 Case</button>
+        <button id="diagnose-btn" class="secondary" disabled>📋 下診斷</button>
+        <button id="settings-btn" class="secondary">⚙ 設定</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ========== 資料模型 ==========
+    const STORAGE_KEY = 'clinicRPG.v1';
+    const LV_MAX = 10;
+    const XP_PER_LV = 10; // 10 XP 升一級
+
+    const ORGANS = [
+      { id: 'cardio',    name: '心臟科',     icon: '❤️' },
+      { id: 'pulmo',     name: '胸腔科',     icon: '🫁' },
+      { id: 'nephro',    name: '腎臟科',     icon: '🫘' },
+      { id: 'gi',        name: '消化科',     icon: '🍽️' },
+      { id: 'rheum',     name: '風濕免疫科', icon: '🛡️' },
+      { id: 'hemeonc',   name: '血液腫瘤科', icon: '🩸' },
+      { id: 'id',        name: '感染科',     icon: '🦠' },
+      { id: 'metab',     name: '新陳代謝科', icon: '⚗️' },
+    ];
+    const DIMENSIONS = [
+      { id: 'history', name: '問診' },
+      { id: 'interp',  name: '判讀' },
+      { id: 'ddx',     name: '鑑別' },
+      { id: 'mgmt',    name: '處置' },
+    ];
+
+    function emptyState() {
+      const stats = {};
+      for (const o of ORGANS) {
+        stats[o.id] = {};
+        for (const d of DIMENSIONS) stats[o.id][d.id] = 0; // XP
+      }
+      return {
+        version: 2,
+        stats,
+        totalCases: 0,
+        createdAt: new Date().toISOString(),
+      };
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return emptyState();
+        const parsed = JSON.parse(raw);
+        if (parsed.version !== 2) return emptyState();
+        // 補齊新器官/維度（面對未來版本變更）
+        const base = emptyState();
+        for (const o of ORGANS) {
+          for (const d of DIMENSIONS) {
+            if (typeof parsed.stats?.[o.id]?.[d.id] !== 'number') {
+              parsed.stats = parsed.stats || {};
+              parsed.stats[o.id] = parsed.stats[o.id] || {};
+              parsed.stats[o.id][d.id] = 0;
+            }
+          }
+        }
+        return { ...base, ...parsed };
+      } catch (e) {
+        console.warn('讀取屬性表失敗，使用空白狀態：', e);
+        return emptyState();
+      }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function xpToLv(xp) {
+      return Math.min(LV_MAX, Math.floor(xp / XP_PER_LV));
+    }
+
+    function addXP(organId, dimId, amount) {
+      const maxXP = LV_MAX * XP_PER_LV;
+      state.stats[organId][dimId] = Math.max(0, Math.min(maxXP, state.stats[organId][dimId] + amount));
+      saveState(state);
+      renderStats();
+    }
+
+    // ========== 畫面 ==========
+    let state = loadState();
+
+    function renderStats() {
+      const container = document.getElementById('stats-container');
+      container.innerHTML = '';
+      let totalXP = 0;
+
+      for (const organ of ORGANS) {
+        const card = document.createElement('div');
+        card.className = 'stat-card';
+
+        const header = document.createElement('div');
+        header.className = 'stat-card-header';
+        const name = document.createElement('div');
+        name.className = 'stat-card-name';
+        name.innerHTML = `<span class="stat-card-icon">${organ.icon}</span>${organ.name}`;
+        const totalLv = DIMENSIONS.reduce((s, d) => s + xpToLv(state.stats[organ.id][d.id]), 0);
+        const total = document.createElement('div');
+        total.className = 'stat-card-total';
+        total.textContent = `總等級 ${totalLv} / ${LV_MAX * DIMENSIONS.length}`;
+        header.appendChild(name);
+        header.appendChild(total);
+        card.appendChild(header);
+
+        for (const dim of DIMENSIONS) {
+          const xp = state.stats[organ.id][dim.id];
+          const lv = xpToLv(xp);
+          totalXP += xp;
+
+          const row = document.createElement('div');
+          row.className = 'stat-row';
+
+          const label = document.createElement('div');
+          label.className = 'stat-dim-label';
+          label.textContent = dim.name;
+
+          const lvText = document.createElement('div');
+          lvText.className = 'stat-lv';
+          lvText.textContent = `LV${lv}`;
+
+          const track = document.createElement('div');
+          track.className = 'lv-bar-track';
+          const fill = document.createElement('div');
+          fill.className = 'lv-bar-fill';
+          const pct = Math.min(100, (xp / (LV_MAX * XP_PER_LV)) * 100);
+          fill.style.width = pct + '%';
+          track.appendChild(fill);
+
+          row.appendChild(label);
+          row.appendChild(lvText);
+          row.appendChild(track);
+          card.appendChild(row);
+        }
+
+        container.appendChild(card);
+      }
+
+      document.getElementById('total-cases').textContent = state.totalCases;
+      document.getElementById('total-xp').textContent = totalXP;
+    }
+
+    // ========== 事件 ==========
+    const els = {
+      newCaseBtn: document.getElementById('new-case-btn'),
+      diagnoseBtn: document.getElementById('diagnose-btn'),
+      settingsBtn: document.getElementById('settings-btn'),
+      sendBtn: document.getElementById('send-btn'),
+      doctorInput: document.getElementById('doctor-input'),
+      devAddBtn: document.getElementById('dev-add-btn'),
+      devResetBtn: document.getElementById('dev-reset-btn'),
+    };
+
+    els.newCaseBtn.addEventListener('click', () => {
+      alert('開新 Case — Step 4 會接 AI 生成。現在是骨架。');
+    });
+    els.diagnoseBtn.addEventListener('click', () => {
+      alert('下診斷 — Step 5 會做評分結算。');
+    });
+    els.settingsBtn.addEventListener('click', () => {
+      alert('設定（API 金鑰）— Step 3 會加。');
+    });
+    els.sendBtn.addEventListener('click', () => {
+      const text = els.doctorInput.value.trim();
+      if (!text) return;
+      alert('問診 — Step 3 會接 AI。\n你打的：' + text);
+    });
+
+    // 開發用測試按鈕（Step 5 接上 AI 評分後可移除）
+    els.devAddBtn.addEventListener('click', () => {
+      const organ = ORGANS[Math.floor(Math.random() * ORGANS.length)];
+      const dim = DIMENSIONS[Math.floor(Math.random() * DIMENSIONS.length)];
+      addXP(organ.id, dim.id, 1);
+      console.log(`[DEV] +1 XP → ${organ.name} / ${dim.name}`);
+    });
+    els.devResetBtn.addEventListener('click', () => {
+      if (!confirm('確定要清空所有屬性？無法還原。')) return;
+      state = emptyState();
+      saveState(state);
+      renderStats();
+    });
+
+    // 初始渲染
+    renderStats();
+    console.log('[Clinic RPG v0.2] 屬性表已載入', state);
+  </script>
+</body>
+</html>
